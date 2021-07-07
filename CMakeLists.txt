@@ -21,13 +21,18 @@
 cmake_minimum_required(VERSION 3.10.2)
 
 # NONE = this project has no language toolchain requirement.
-project(Vulkan-Headers NONE)
+project(Vulkan-Headers VERSION 1.0)
 
 # User-interface declarations ----------------------------------------------------------------------------------------------------
 # This section contains variables that affect development GUIs (e.g. CMake GUI and IDEs), such as option(), folders, and variables
 # with the CACHE property.
 
 include(GNUInstallDirs)
+include(../../../cmake/tools.cmake)
+include(../../../cmake/CPM.cmake)
+
+CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.6.0")
+
 
 if(WIN32 AND CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     # Windows: if install locations not set by user, set install prefix to "<build_dir>\install".
@@ -38,15 +43,22 @@ endif()
 
 # define exported targets for nested project builds to consume
 add_library(Vulkan-Headers INTERFACE)
-target_include_directories(Vulkan-Headers INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_include_directories(Vulkan-Headers INTERFACE
+$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}> )
 add_library(Vulkan::Headers ALIAS Vulkan-Headers)
 
 add_library(Vulkan-Registry INTERFACE)
 target_include_directories(Vulkan-Registry INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/registry")
 add_library(Vulkan::Registry ALIAS Vulkan-Registry)
 
-install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/vulkan" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/registry" DESTINATION ${CMAKE_INSTALL_DATADIR}/vulkan)
+packageProject(
+  NAME ${PROJECT_NAME}
+  VERSION ${PROJECT_VERSION}
+  BINARY_DIR ${PROJECT_BINARY_DIR}
+  INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include
+  INCLUDE_DESTINATION include/${PROJECT_NAME}-${PROJECT_VERSION}
+)
 
 # uninstall target
 if(NOT TARGET uninstall)
